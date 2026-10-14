@@ -1,36 +1,19 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { authors, tags } from "@/lib/data";
-import { formatNumber } from "@/lib/data";
+import { apiGetTags } from "@/lib/api";
+import { Tag } from "@/lib/types";
 
 export default function Sidebar() {
+  const [tags, setTags] = useState<Tag[]>([]);
+
+  useEffect(() => {
+    apiGetTags().then(setTags).catch(() => {});
+  }, []);
+
   return (
     <aside className="space-y-4">
-      {/* 作者榜 */}
-      <div className="card p-4">
-        <h3 className="text-sm font-bold mb-3">🎖️ 作者榜</h3>
-        <div className="space-y-3">
-          {authors.slice(0, 5).map((author, i) => (
-            <div key={author.id} className="flex items-center gap-3">
-              <span
-                className={`w-5 text-center text-sm font-bold ${
-                  i < 3 ? "text-orange-500" : ""
-                }`}
-                style={{ color: i < 3 ? "#ff7d00" : "var(--text-tertiary)" }}
-              >
-                {i + 1}
-              </span>
-              <img src={author.avatar} alt={author.name} className="w-8 h-8 rounded-full" />
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium truncate">{author.name}</div>
-                <div className="text-xs" style={{ color: "var(--text-tertiary)" }}>
-                  {author.level} · {formatNumber(author.followers)} 关注
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* 热门标签 */}
       <div className="card p-4">
         <h3 className="text-sm font-bold mb-3">🏷️ 热门标签</h3>

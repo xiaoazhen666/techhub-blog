@@ -1,19 +1,49 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useEffect, useState } from "react";
 import ArticleCard from "@/components/ArticleCard";
 import Sidebar from "@/components/Sidebar";
-import { categories, getArticlesByCategory } from "@/lib/data";
+import { apiGetArticles, apiGetCategories } from "@/lib/api";
+import { Article, Category } from "@/lib/types";
 
-function HomeContent() {
-  const [active, setActive] = useState("recommend");
-  const list = getArticlesByCategory(active);
+export default function Home() {
+  const [active, setActive] = useState<number>(0); // 0 表示"推荐"（全部）
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    apiGetCategories()
+      .then(setCategories)
+      .catch(() => setError("加载分类失败"));
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+    apiGetArticles({ categoryId: active || undefined, page: 0, size: 20 })
+      .then((res) => setArticles(res.content))
+      .catch((e) => setError(e.message || "加载文章失败"))
+      .finally(() => setLoading(false));
+  }, [active]);
 
   return (
     <div className="container-layout mt-6 flex gap-6">
       <div className="flex-1 min-w-0">
         {/* 分类 Tab */}
         <div className="card p-1 mb-4 flex overflow-x-auto">
+          <button
+            onClick={() => setActive(0)}
+            className="shrink-0 px-4 py-2 text-sm rounded-md transition-colors whitespace-nowrap"
+            style={{
+              color: active === 0 ? "#1e80ff" : "var(--text-secondary)",
+              backgroundColor: active === 0 ? "var(--brand-light, #eaf2ff)" : "transparent",
+              fontWeight: active === 0 ? 600 : 400,
+            }}
+          >
+            推荐
+          </button>
           {categories.map((c) => (
             <button
               key={c.id}
@@ -31,24 +61,30 @@ function HomeContent() {
         </div>
 
         {/* 文章列表 */}
-        <div className="space-y-4">
-          {list.map((article) => (
-            <ArticleCard key={article.id} article={article} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="card p-16 text-center" style={{ color: "var(--text-tertiary)" }}>
+            加载中...
+          </div>
+        ) : error ? (
+          <div className="card p-16 text-center" style={{ color: "var(--text-tertiary)" }}>
+            {error}（请确认后端已启动在 http://localhost:8081）
+          </div>
+        ) : articles.length === 0 ? (
+          <div className="card p-16 text-center" style={{ color: "var(--text-tertiary)" }}>
+            暂无文章
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {articles.map((article) => (
+              <ArticleCard key={article.id} article={article} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="hidden lg:block w-72 shrink-0">
         <Sidebar />
       </div>
     </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<div className="container-layout mt-6">加载中...</div>}>
-      <HomeContent />
-    </Suspense>
   );
 }

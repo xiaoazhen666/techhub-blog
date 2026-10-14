@@ -1,38 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Article, Comment } from "@/lib/types";
-import { formatDate, formatNumber, getAuthor } from "@/lib/data";
+import { apiGetComments, apiCreateComment, apiLikeArticle, formatDate, formatNumber } from "@/lib/api";
 
-export default function ArticleDetailClient({
-  article,
-  comments: initialComments,
-}: {
-  article: Article;
-  comments: Comment[];
-}) {
+export default function ArticleDetailClient({ article }: { article: Article }) {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(article.likes);
-  const [comments, setComments] = useState(initialComments);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [commentText, setCommentText] = useState("");
+  const [loadingComments, setLoadingComments] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    apiGetComments(article.id)
+      .then((res) => setComments(res.content))
+      .catch(() => {})
+      .finally(() => setLoadingComments(false));
+  }, [article.id]);
 
   const toggleLike = () => {
-    setLiked(!liked);
-    setLikes(liked ? likes - 1 : likes + 1);
+    if (liked) return; // 简单处理，避免重复点赞
+    apiLikeArticle(article.id)
+      .then(() => {
+        setLiked(true);
+        setLikes(likes + 1);
+      })
+      .catch(() => {});
   };
 
   const submitComment = () => {
-    if (!commentText.trim()) return;
-    const newComment: Comment = {
-      id: "c" + Date.now(),
-      articleId: article.id,
-      authorId: "me",
-      content: commentText.trim(),
-      likes: 0,
-      createdAt: new Date().toISOString(),
-    };
-    setComments([newComment, ...comments]);
-    setCommentText("");
+    if (!commentText.trim() || submitting) return;
+    setSubmitting(true);
+    apiCreateComment(article.id, commentText.trim())
+      .then((c) => {
+        setComments([c, ...comments]);
+        setCommentText("");
+      })
+      .catch((e) => alert(e.message || "评论失败，请先登录"))
+      .finally(() => setSubmitting(false));
   };
 
   return (
@@ -66,7 +72,7 @@ export default function ArticleDetailClient({
             <textarea
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="友善评论，理性发言"
+              placeholder="友善评论，理性发言（评论需登录）"
               className="w-full rounded-md border p-3 text-sm outline-none resize-none h-20 transition-colors focus:border-brand"
               style={{
                 backgroundColor: "var(--hover)",
@@ -75,36 +81,37 @@ export default function ArticleDetailClient({
               }}
             />
             <div className="flex justify-end mt-2">
-              <button onClick={submitComment} className="btn-primary text-sm">
-                发布评论
+              <button onClick={submitComment} disabled={submitting} className="btn-primary text-sm">
+                {submitting ? "发布中..." : "发布评论"}
               </button>
             </div>
           </div>
         </div>
 
-        <div className="space-y-4">
-          {comments.map((c) => {
-            const ca = getAuthor(c.authorId);
-            return (
+        {loadingComments ? (
+          <div className="text-center py-8 text-sm" style={{ color: "var(--text-tertiary)" }}>
+            加载评论中...
+          </div>
+        ) : comments.length === 0 ? (
+          <div className="text-center py-8 text-sm" style={{ color: "var(--text-tertiary)" }}>
+            暂无评论，来抢沙发～
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {comments.map((c) => (
               <div key={c.id} className="flex gap-3">
-                <img
-                  src={ca?.avatar || "https://api.dicebear.com/7.x/identicon/svg?seed=me"}
-                  alt={ca?.name || "我"}
-                  className="w-8 h-8 rounded-full"
-                />
+                <img src={c.userAvatar} alt={c.userName} className="w-8 h-8 rounded-full" />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 text-xs" style={{ color: "var(--text-tertiary)" }}>
-                    <span className="font-medium" style={{ color: "var(--text)" }}>
-                      {ca?.name || "我"}
-                    </span>
+                    <span className="font-medium" style={{ color: "var(--text)" }}>{c.userName}</span>
                     <span>{formatDate(c.createdAt)}</span>
                   </div>
                   <p className="text-sm mt-1 leading-relaxed">{c.content}</p>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

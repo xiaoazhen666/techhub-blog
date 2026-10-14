@@ -8,6 +8,7 @@ export default function Header() {
   const pathname = usePathname();
   const [dark, setDark] = useState(false);
   const [search, setSearch] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -15,6 +16,7 @@ export default function Header() {
       setDark(true);
       document.documentElement.classList.add("dark");
     }
+    setLoggedIn(!!localStorage.getItem("token"));
   }, []);
 
   const toggleDark = () => {
@@ -45,9 +47,6 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-1 text-sm">
           {[
             { href: "/", label: "首页" },
-            { href: "/?category=frontend", label: "前端" },
-            { href: "/?category=backend", label: "后端" },
-            { href: "/?category=ai", label: "人工智能" },
             { href: "/tags", label: "标签" },
           ].map((item) => (
             <Link
@@ -110,14 +109,20 @@ export default function Header() {
           <span className="mr-1">+</span>写文章
         </Link>
 
-        <Link href="/profile" className="shrink-0">
-          <img
-            src="https://api.dicebear.com/7.x/identicon/svg?seed=me"
-            alt="头像"
-            className="w-8 h-8 rounded-full border"
-            style={{ borderColor: "var(--border)" }}
-          />
-        </Link>
+        {loggedIn ? (
+          <Link href="/profile" className="shrink-0">
+            <img
+              src="https://api.dicebear.com/7.x/identicon/svg?seed=me"
+              alt="头像"
+              className="w-8 h-8 rounded-full border"
+              style={{ borderColor: "var(--border)" }}
+            />
+          </Link>
+        ) : (
+          <Link href="/login" className="btn-outline shrink-0 text-sm">
+            登录
+          </Link>
+        )}
       </div>
     </header>
   );

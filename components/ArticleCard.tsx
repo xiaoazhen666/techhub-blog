@@ -1,22 +1,16 @@
 import Link from "next/link";
 import { Article } from "@/lib/types";
-import { formatDate, formatNumber, getAuthor } from "@/lib/data";
+import { formatDate, formatNumber } from "@/lib/api";
 
 export default function ArticleCard({ article }: { article: Article }) {
-  const author = getAuthor(article.authorId);
   return (
     <div className="card p-5 transition-shadow hover:shadow-cardHover cursor-pointer group">
       <Link href={`/article/${article.id}`} className="block">
         <div className="flex gap-4">
           <div className="flex-1 min-w-0">
-            {article.isPinned && (
+            {article.pinned && (
               <span className="inline-block text-xs text-brand font-medium mb-2">
                 ⭐ 置顶
-              </span>
-            )}
-            {article.isHot && !article.isPinned && (
-              <span className="inline-block text-xs text-orange-500 font-medium mb-2">
-                🔥 热门
               </span>
             )}
             <h3 className="text-base font-bold leading-snug mb-2 line-clamp-2 group-hover:text-brand transition-colors">
@@ -29,16 +23,14 @@ export default function ArticleCard({ article }: { article: Article }) {
               {article.summary}
             </p>
             <div className="flex items-center gap-4 text-xs" style={{ color: "var(--text-tertiary)" }}>
-              {author && (
-                <span className="flex items-center gap-1.5">
-                  <img
-                    src={author.avatar}
-                    alt={author.name}
-                    className="w-5 h-5 rounded-full"
-                  />
-                  <span style={{ color: "var(--text-secondary)" }}>{author.name}</span>
-                </span>
-              )}
+              <span className="flex items-center gap-1.5">
+                <img
+                  src={article.authorAvatar}
+                  alt={article.authorName}
+                  className="w-5 h-5 rounded-full"
+                />
+                <span style={{ color: "var(--text-secondary)" }}>{article.authorName}</span>
+              </span>
               <span>{formatDate(article.createdAt)}</span>
               <span className="flex items-center gap-1">
                 <EyeIcon />

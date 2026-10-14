@@ -1,39 +1,61 @@
 "use client";
 
-import { useState } from "react";
-import { categories } from "@/lib/data";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { apiCreateArticle, apiGetCategories } from "@/lib/api";
+import { Category } from "@/lib/types";
 
 export default function WritePage() {
+  const router = useRouter();
+  const [categories, setCategories] = useState<Category[]>([]);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("frontend");
+  const [categoryId, setCategoryId] = useState<number>(0);
   const [tags, setTags] = useState("");
   const [content, setContent] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const submit = () => {
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login?redirect=/write");
+      return;
+    }
+    apiGetCategories().then((list) => {
+      setCategories(list);
+      if (list.length > 0) setCategoryId(list[0].id);
+    });
+  }, [router]);
+
+  const submit = async () => {
     if (!title.trim() || !content.trim()) {
       alert("请填写标题和正文内容");
       return;
     }
-    setSubmitted(true);
+    if (!categoryId) {
+      alert("请选择分类");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const tagList = tags
+        .split(/[,，]/)
+        .map((t) => t.trim())
+        .filter(Boolean);
+      await apiCreateArticle({
+        title: title.trim(),
+        summary: content.trim().slice(0, 100),
+        content: content.trim(),
+        categoryId,
+        tags: tagList,
+      });
+      alert("发布成功！");
+      router.push("/");
+    } catch (e: any) {
+      alert(e.message || "发布失败，请先登录");
+    } finally {
+      setSubmitting(false);
+    }
   };
-
-  if (submitted) {
-    return (
-      <div className="container-layout mt-6">
-        <div className="card p-16 text-center">
-          <div className="text-5xl mb-4">✅</div>
-          <h1 className="text-xl font-bold mb-2">发布成功！</h1>
-          <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
-            你的文章《{title}》已提交（当前为演示环境，未真实落库）
-          </p>
-          <button className="btn-primary" onClick={() => { setSubmitted(false); setTitle(""); setContent(""); setTags(""); }}>
-            再写一篇
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container-layout mt-6 max-w-3xl">
@@ -56,12 +78,12 @@ export default function WritePage() {
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">分类</label>
               <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={categoryId}
+                onChange={(e) => setCategoryId(Number(e.target.value))}
                 className="w-full rounded-md border p-3 text-sm outline-none transition-colors focus:border-brand"
                 style={{ backgroundColor: "var(--hover)", borderColor: "var(--border)", color: "var(--text)" }}
               >
-                {categories.filter((c) => c.id !== "recommend").map((c) => (
+                {categories.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
@@ -90,8 +112,10 @@ export default function WritePage() {
           </div>
 
           <div className="flex justify-end gap-3">
-            <button className="btn-outline">保存草稿</button>
-            <button onClick={submit} className="btn-primary">发布文章</button>
+            <button className="btn-outline" onClick={() => router.push("/")}>取消</button>
+            <button onClick={submit} disabled={submitting} className="btn-primary">
+              {submitting ? "发布中..." : "发布文章"}
+            </button>
           </div>
         </div>
       </div>

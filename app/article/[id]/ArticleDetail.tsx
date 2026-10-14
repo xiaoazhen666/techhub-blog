@@ -1,10 +1,48 @@
-import { Article, Comment } from "@/lib/types";
-import { formatDate, formatNumber, getAuthor, getCommentsByArticle } from "@/lib/data";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { apiGetArticle } from "@/lib/api";
+import { Article } from "@/lib/types";
+import { formatDate, formatNumber } from "@/lib/api";
 import ArticleDetailClient from "./ArticleDetailClient";
 
-export default function ArticleDetail({ article }: { article: Article }) {
-  const author = getAuthor(article.authorId)!;
-  const comments = getCommentsByArticle(article.id);
+export default function ArticleDetail() {
+  const params = useParams();
+  const id = Number(params.id);
+  const [article, setArticle] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    setError("");
+    apiGetArticle(id)
+      .then(setArticle)
+      .catch((e) => setError(e.message || "加载失败"))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="container-layout mt-6">
+        <div className="card p-16 text-center" style={{ color: "var(--text-tertiary)" }}>
+          加载中...
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !article) {
+    return (
+      <div className="container-layout mt-6">
+        <div className="card p-16 text-center" style={{ color: "var(--text-tertiary)" }}>
+          {error || "文章不存在"}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container-layout mt-6 flex gap-6">
@@ -16,11 +54,12 @@ export default function ArticleDetail({ article }: { article: Article }) {
 
           {/* 作者信息 */}
           <div className="flex items-center gap-3 pb-6 mb-6 border-b" style={{ borderColor: "var(--border)" }}>
-            <img src={author.avatar} alt={author.name} className="w-10 h-10 rounded-full" />
+            <img src={article.authorAvatar} alt={article.authorName} className="w-10 h-10 rounded-full" />
             <div className="flex-1">
-              <div className="text-sm font-medium">{author.name}</div>
+              <div className="text-sm font-medium">{article.authorName}</div>
               <div className="text-xs mt-0.5" style={{ color: "var(--text-tertiary)" }}>
-                {author.level} · {formatDate(article.createdAt)} · {formatNumber(article.views)} 阅读
+                {article.categoryName && `${article.categoryName} · `}
+                {formatDate(article.createdAt)} · {formatNumber(article.views)} 阅读
               </div>
             </div>
             <button className="btn-primary text-sm">+ 关注</button>
@@ -34,6 +73,7 @@ export default function ArticleDetail({ article }: { article: Article }) {
                 .split("\n\n")
                 .map((block) => {
                   if (block.startsWith("## ")) return `<h2>${block.slice(3)}</h2>`;
+                  if (block.startsWith("### ")) return `<h3>${block.slice(3)}</h3>`;
                   return `<p>${block}</p>`;
                 })
                 .join(""),
@@ -42,7 +82,7 @@ export default function ArticleDetail({ article }: { article: Article }) {
         </div>
 
         {/* 点赞评论栏 */}
-        <ArticleDetailClient article={article} comments={comments} />
+        <ArticleDetailClient article={article} />
       </article>
 
       {/* 右侧目录 */}
