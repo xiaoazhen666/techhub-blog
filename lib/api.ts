@@ -32,7 +32,11 @@ export const apiRegister = (body: {
   username: string;
   password: string;
   nickname?: string;
-}) => request("/api/auth/register", { method: "POST", body: JSON.stringify(body) });
+}) =>
+  request<{ token: string; userId: number; username: string; nickname: string; avatar: string }>(
+    "/api/auth/register",
+    { method: "POST", body: JSON.stringify(body) }
+  );
 
 export const apiLogin = (body: { username: string; password: string }) =>
   request<{ token: string; userId: number; username: string; nickname: string; avatar: string }>(
