@@ -9,7 +9,11 @@ export default function Sidebar() {
   const [tags, setTags] = useState<Tag[]>([]);
 
   useEffect(() => {
-    apiGetTags().then(setTags).catch(() => {});
+    apiGetTags().then((list) => {
+      // 按文章数降序，取前 12 个
+      const sorted = [...list].sort((a, b) => (b.articleCount ?? 0) - (a.articleCount ?? 0)).slice(0, 12);
+      setTags(sorted);
+    }).catch(() => {});
   }, []);
 
   return (
@@ -26,6 +30,7 @@ export default function Sidebar() {
               style={{ backgroundColor: "var(--hover)", color: "var(--text-secondary)" }}
             >
               {tag.name}
+              <span style={{ color: "var(--text-tertiary)" }}>（{tag.articleCount ?? 0}）</span>
             </Link>
           ))}
         </div>

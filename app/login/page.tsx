@@ -4,11 +4,13 @@ import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { apiLogin, apiRegister } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 
 function LoginContent() {
   const router = useRouter();
   const params = useSearchParams();
   const redirect = params.get("redirect") || "/";
+  const { refreshUser } = useAuth();
 
   const [mode, setMode] = useState<"login" | "register">("login");
   const [username, setUsername] = useState("");
@@ -40,6 +42,7 @@ function LoginContent() {
           avatar: data.avatar,
         })
       );
+      refreshUser();
       router.push(redirect);
     } catch (e: any) {
       setError(e.message || "操作失败");

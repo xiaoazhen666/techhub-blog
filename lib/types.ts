@@ -12,6 +12,7 @@ export interface Author {
 export interface Tag {
   id: number;
   name: string;
+  articleCount?: number;
 }
 
 export interface Article {
@@ -67,4 +68,7 @@ export interface User {
   avatar: string;
   bio?: string;
   level?: string;
+  followers?: number;
+  following?: number;
+  likes?: number;
 }

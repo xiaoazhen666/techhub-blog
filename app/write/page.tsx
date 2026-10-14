@@ -4,38 +4,44 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiCreateArticle, apiGetCategories } from "@/lib/api";
 import { Category } from "@/lib/types";
+import { useAuth } from "@/lib/auth";
 
 export default function WritePage() {
   const router = useRouter();
+  const { user, loading } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
   const [categoryId, setCategoryId] = useState<number>(0);
   const [tags, setTags] = useState("");
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/login?redirect=/write");
-      return;
-    }
     apiGetCategories().then((list) => {
       setCategories(list);
       if (list.length > 0) setCategoryId(list[0].id);
     });
-  }, [router]);
+  }, []);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/login?redirect=/write");
+    }
+  }, [user, loading, router]);
 
   const submit = async () => {
     if (!title.trim() || !content.trim()) {
-      alert("请填写标题和正文内容");
+      setError("请填写标题和正文内容");
       return;
     }
     if (!categoryId) {
-      alert("请选择分类");
+      setError("请选择分类");
       return;
     }
     setSubmitting(true);
+    setError("");
     try {
       const tagList = tags
         .split(/[,，]/)
@@ -43,24 +49,37 @@ export default function WritePage() {
         .filter(Boolean);
       await apiCreateArticle({
         title: title.trim(),
-        summary: content.trim().slice(0, 100),
+        summary: summary.trim() || content.trim().slice(0, 100),
         content: content.trim(),
         categoryId,
         tags: tagList,
       });
-      alert("发布成功！");
       router.push("/");
     } catch (e: any) {
-      alert(e.message || "发布失败，请先登录");
+      setError(e.message || "发布失败，请先登录");
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (loading || !user) {
+    return (
+      <div className="container-layout mt-16 text-center" style={{ color: "var(--text-tertiary)" }}>
+        加载中...
+      </div>
+    );
+  }
+
   return (
     <div className="container-layout mt-6 max-w-3xl">
       <div className="card p-6 md:p-8">
         <h1 className="text-xl font-bold mb-6">写文章</h1>
+
+        {error && (
+          <div className="mb-4 p-3 rounded-md text-sm bg-red-50 text-red-600 border border-red-200">
+            {error}
+          </div>
+        )}
 
         <div className="space-y-5">
           <div>
@@ -101,11 +120,22 @@ export default function WritePage() {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-2 block">正文</label>
+            <label className="text-sm font-medium mb-2 block">摘要（选填，不填自动截取正文）</label>
+            <input
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              placeholder="一句话概括文章内容..."
+              className="w-full rounded-md border p-3 text-sm outline-none transition-colors focus:border-brand"
+              style={{ backgroundColor: "var(--hover)", borderColor: "var(--border)", color: "var(--text)" }}
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">正文（支持 Markdown 语法）</label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="支持 Markdown 语法，开始你的创作吧..."
+              placeholder="开始你的创作吧...支持 ## 标题、**加粗**、列表等 Markdown 语法"
               className="w-full rounded-md border p-4 text-sm outline-none resize-y min-h-80 leading-relaxed transition-colors focus:border-brand"
               style={{ backgroundColor: "var(--hover)", borderColor: "var(--border)", color: "var(--text)" }}
             />

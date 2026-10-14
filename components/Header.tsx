@@ -1,14 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
   const [dark, setDark] = useState(false);
   const [search, setSearch] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -16,7 +19,6 @@ export default function Header() {
       setDark(true);
       document.documentElement.classList.add("dark");
     }
-    setLoggedIn(!!localStorage.getItem("token"));
   }, []);
 
   const toggleDark = () => {
@@ -105,19 +107,64 @@ export default function Header() {
           )}
         </button>
 
-        <Link href="/write" className="btn-primary shrink-0">
+        <Link
+          href="/write"
+          className="btn-primary shrink-0"
+          onClick={(e) => {
+            if (!user) {
+              e.preventDefault();
+              router.push("/login?redirect=/write");
+            }
+          }}
+        >
           <span className="mr-1">+</span>写文章
         </Link>
 
-        {loggedIn ? (
-          <Link href="/profile" className="shrink-0">
-            <img
-              src="https://api.dicebear.com/7.x/identicon/svg?seed=me"
-              alt="头像"
-              className="w-8 h-8 rounded-full border"
-              style={{ borderColor: "var(--border)" }}
-            />
-          </Link>
+        {user ? (
+          <div className="relative shrink-0">
+            <button onClick={() => setShowMenu((v) => !v)} className="block">
+              <img
+                src={user.avatar}
+                alt={user.nickname}
+                className="w-8 h-8 rounded-full border"
+                style={{ borderColor: "var(--border)" }}
+              />
+            </button>
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                <div
+                  className="absolute right-0 top-10 w-40 py-1 rounded-md shadow-lg z-20 border"
+                  style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}
+                >
+                  <Link
+                    href="/profile"
+                    onClick={() => setShowMenu(false)}
+                    className="block px-4 py-2 text-sm hover:bg-[var(--hover)]"
+                  >
+                    个人主页
+                  </Link>
+                  <Link
+                    href="/write"
+                    onClick={() => setShowMenu(false)}
+                    className="block px-4 py-2 text-sm hover:bg-[var(--hover)]"
+                  >
+                    写文章
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      logout();
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--hover)]"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    退出登录
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         ) : (
           <Link href="/login" className="btn-outline shrink-0 text-sm">
             登录

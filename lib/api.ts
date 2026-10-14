@@ -117,8 +117,25 @@ export const apiGetCategories = async (): Promise<Category[]> => {
 
 export const apiGetTags = async (): Promise<Tag[]> => {
   const raw = await request<any[]>("/api/tags");
-  return raw.map((t) => ({ id: t.id, name: t.name }));
+  return raw.map((t) => ({ id: t.id, name: t.name, articleCount: t.articleCount ?? 0 }));
 };
+
+// ===== 用户 =====
+export const apiGetMe = () =>
+  request<{
+    id: number;
+    username: string;
+    nickname: string;
+    avatar: string;
+    bio?: string;
+    level?: string;
+    followers?: number;
+    following?: number;
+    likes?: number;
+  }>("/api/users/me");
+
+export const apiGetMyArticles = (page = 0, size = 20) =>
+  request<PageResult<Article>>(`/api/users/me/articles?page=${page}&size=${size}`);
 
 // ===== 工具函数 =====
 export function formatNumber(n: number): string {

@@ -18,7 +18,12 @@ export default function TagsPage() {
 
   return (
     <div className="container-layout mt-6">
-      <h1 className="text-xl font-bold mb-6">标签广场</h1>
+      <div className="mb-6">
+        <h1 className="text-xl font-bold">标签广场</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
+          共 {tags.length} 个标签，点击查看相关文章
+        </p>
+      </div>
       {loading ? (
         <div className="card p-12 text-center" style={{ color: "var(--text-tertiary)" }}>加载中...</div>
       ) : tags.length === 0 ? (
@@ -29,11 +34,15 @@ export default function TagsPage() {
             <Link
               key={tag.id}
               href={`/tag/${tag.name}`}
-              className="card p-4 hover:shadow-cardHover transition-shadow"
+              className="card p-5 hover:shadow-cardHover transition-shadow group"
             >
-              <div className="text-base font-bold text-brand">#{tag.name}</div>
-              <div className="text-xs mt-2" style={{ color: "var(--text-tertiary)" }}>
-                点击查看相关文章
+              <div className="flex items-center justify-between">
+                <div className="text-base font-bold text-brand group-hover:underline">
+                  #{tag.name}
+                </div>
+              </div>
+              <div className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
+                {tag.articleCount ?? 0} 篇文章
               </div>
             </Link>
           ))}

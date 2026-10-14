@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 import { apiGetArticle } from "@/lib/api";
 import { Article } from "@/lib/types";
 import { formatDate, formatNumber } from "@/lib/api";
@@ -66,19 +69,14 @@ export default function ArticleDetail() {
           </div>
 
           {/* 正文 */}
-          <div
-            className="prose-custom"
-            dangerouslySetInnerHTML={{
-              __html: article.content
-                .split("\n\n")
-                .map((block) => {
-                  if (block.startsWith("## ")) return `<h2>${block.slice(3)}</h2>`;
-                  if (block.startsWith("### ")) return `<h3>${block.slice(3)}</h3>`;
-                  return `<p>${block}</p>`;
-                })
-                .join(""),
-            }}
-          />
+          <div className="prose-custom">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+            >
+              {article.content}
+            </ReactMarkdown>
+          </div>
         </div>
 
         {/* 点赞评论栏 */}

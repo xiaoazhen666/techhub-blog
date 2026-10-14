@@ -111,6 +111,82 @@ body {
   border-radius: 8px;
   margin: 1em auto;
 }
+.prose-custom table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  font-size: 14px;
+}
+.prose-custom table th,
+.prose-custom table td {
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  text-align: left;
+}
+.prose-custom table th {
+  background: var(--hover);
+  font-weight: 600;
+}
+.prose-custom h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 1.6em 0 0.8em;
+}
+.prose-custom h4 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 1.2em 0 0.5em;
+}
+.prose-custom strong {
+  font-weight: 600;
+}
+.prose-custom hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5em 0;
+}
+
+/* highlight.js 代码高亮主题（浅色背景友好） */
+.prose-custom .hljs {
+  background: transparent;
+  color: #d4d4d4;
+}
+.prose-custom .hljs-keyword,
+.prose-custom .hljs-selector-tag,
+.prose-custom .hljs-literal,
+.prose-custom .hljs-section,
+.prose-custom .hljs-link {
+  color: #569cd6;
+}
+.prose-custom .hljs-string,
+.prose-custom .hljs-title,
+.prose-custom .hljs-name,
+.prose-custom .hljs-type,
+.prose-custom .hljs-attribute,
+.prose-custom .hljs-symbol,
+.prose-custom .hljs-bullet,
+.prose-custom .hljs-addition,
+.prose-custom .hljs-variable,
+.prose-custom .hljs-template-tag,
+.prose-custom .hljs-template-variable {
+  color: #ce9178;
+}
+.prose-custom .hljs-comment,
+.prose-custom .hljs-quote,
+.prose-custom .hljs-deletion,
+.prose-custom .hljs-meta {
+  color: #6a9955;
+}
+.prose-custom .hljs-number,
+.prose-custom .hljs-regexp,
+.prose-custom .hljs-built_in {
+  color: #b5cea8;
+}
+.prose-custom .hljs-title.function_,
+.prose-custom .hljs-function .hljs-title {
+  color: #dcdcaa;
+}
+
 
 /* 滚动条 */
 ::-webkit-scrollbar {
