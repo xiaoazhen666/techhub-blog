@@ -19,12 +19,22 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
-  const json = (await res.json()) as ApiResponse<T>;
-  if (json.code !== 200) {
-    throw new Error(json.message || "请求失败");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000); // 15 秒超时
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+    const json = (await res.json()) as ApiResponse<T>;
+    if (json.code !== 200) {
+      throw new Error(json.message || "请求失败");
+    }
+    return json.data;
+  } finally {
+    clearTimeout(timer);
   }
-  return json.data;
 }
 
 // ===== 认证 =====

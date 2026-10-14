@@ -12,6 +12,7 @@ export default function Home() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     apiGetCategories()
@@ -26,7 +27,7 @@ export default function Home() {
       .then((res) => setArticles(res.content))
       .catch((e) => setError(e.message || "加载文章失败"))
       .finally(() => setLoading(false));
-  }, [active]);
+  }, [active, refresh]);
 
   return (
     <div className="container-layout mt-6 flex gap-6">
@@ -67,7 +68,13 @@ export default function Home() {
           </div>
         ) : error ? (
           <div className="card p-16 text-center" style={{ color: "var(--text-tertiary)" }}>
-            {error}（请确认后端已启动在 http://localhost:8081）
+            {error}
+            <button
+              onClick={() => setRefresh((v) => v + 1)}
+              className="block mx-auto mt-3 text-sm text-brand hover:underline"
+            >
+              点击重试
+            </button>
           </div>
         ) : articles.length === 0 ? (
           <div className="card p-16 text-center" style={{ color: "var(--text-tertiary)" }}>
