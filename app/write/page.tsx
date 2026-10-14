@@ -17,12 +17,24 @@ export default function WritePage() {
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  useEffect(() => {
-    apiGetCategories().then((list) => {
+  const loadCategories = async () => {
+    setLoadingCategories(true);
+    try {
+      const list = await apiGetCategories();
       setCategories(list);
       if (list.length > 0) setCategoryId(list[0].id);
-    });
+    } catch (e: any) {
+      setError("分类加载失败，请稍后重试");
+      console.error("加载分类失败:", e);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
   }, []);
 
   useEffect(() => {
@@ -96,16 +108,31 @@ export default function WritePage() {
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">分类</label>
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(Number(e.target.value))}
-                className="w-full rounded-md border p-3 text-sm outline-none transition-colors focus:border-brand"
-                style={{ backgroundColor: "var(--hover)", borderColor: "var(--border)", color: "var(--text)" }}
-              >
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              {loadingCategories ? (
+                <div className="w-full rounded-md border p-3 text-sm" style={{ backgroundColor: "var(--hover)", borderColor: "var(--border)", color: "var(--text-tertiary)" }}>
+                  分类加载中...
+                </div>
+              ) : categories.length === 0 ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-md border p-3 text-sm" style={{ backgroundColor: "var(--hover)", borderColor: "var(--border)", color: "var(--text-tertiary)" }}>
+                    暂无分类
+                  </div>
+                  <button onClick={loadCategories} className="btn-outline px-3 py-3 text-sm whitespace-nowrap">
+                    重试
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(Number(e.target.value))}
+                  className="w-full rounded-md border p-3 text-sm outline-none transition-colors focus:border-brand"
+                  style={{ backgroundColor: "var(--hover)", borderColor: "var(--border)", color: "var(--text)" }}
+                >
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">标签（逗号分隔）</label>
