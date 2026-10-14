@@ -111,8 +111,13 @@ export const apiCreateComment = (articleId: number, content: string) =>
 // ===== 分类 & 标签 =====
 export const apiGetCategories = async (): Promise<Category[]> => {
   const raw = await request<any[]>("/api/categories");
-  // 后端分类带了 articles 列表，这里剥离成纯分类
-  return raw.map((c) => ({ id: c.id, name: c.name, description: c.description }));
+  // 后端分类返回 CategoryVO，含 articleCount
+  return raw.map((c) => ({
+    id: c.id,
+    name: c.name,
+    description: c.description,
+    articleCount: c.articleCount ?? 0,
+  }));
 };
 
 export const apiGetTags = async (): Promise<Tag[]> => {

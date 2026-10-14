@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import ArticleCard from "@/components/ArticleCard";
 import Sidebar from "@/components/Sidebar";
 import { apiGetArticles, apiGetCategories } from "@/lib/api";
 import { Article, Category } from "@/lib/types";
 
 export default function Home() {
-  const [active, setActive] = useState<number>(0); // 0 表示"推荐"（全部）
   const [categories, setCategories] = useState<Category[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,11 +23,11 @@ export default function Home() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    apiGetArticles({ categoryId: active || undefined, page: 0, size: 20 })
+    apiGetArticles({ page: 0, size: 20 })
       .then((res) => setArticles(res.content))
       .catch((e) => setError(e.message || "加载文章失败"))
       .finally(() => setLoading(false));
-  }, [active, refresh]);
+  }, [refresh]);
 
   return (
     <div className="container-layout mt-6 flex gap-6">
@@ -35,29 +35,24 @@ export default function Home() {
         {/* 分类 Tab */}
         <div className="card p-1 mb-4 flex overflow-x-auto">
           <button
-            onClick={() => setActive(0)}
             className="shrink-0 px-4 py-2 text-sm rounded-md transition-colors whitespace-nowrap"
             style={{
-              color: active === 0 ? "#1e80ff" : "var(--text-secondary)",
-              backgroundColor: active === 0 ? "var(--brand-light, #eaf2ff)" : "transparent",
-              fontWeight: active === 0 ? 600 : 400,
+              color: "#1e80ff",
+              backgroundColor: "var(--brand-light, #eaf2ff)",
+              fontWeight: 600,
             }}
           >
             推荐
           </button>
           {categories.map((c) => (
-            <button
+            <Link
               key={c.id}
-              onClick={() => setActive(c.id)}
-              className="shrink-0 px-4 py-2 text-sm rounded-md transition-colors whitespace-nowrap"
-              style={{
-                color: active === c.id ? "#1e80ff" : "var(--text-secondary)",
-                backgroundColor: active === c.id ? "var(--brand-light, #eaf2ff)" : "transparent",
-                fontWeight: active === c.id ? 600 : 400,
-              }}
+              href={`/category/${c.id}`}
+              className="shrink-0 px-4 py-2 text-sm rounded-md transition-colors whitespace-nowrap hover:bg-brand-light"
+              style={{ color: "var(--text-secondary)" }}
             >
               {c.name}
-            </button>
+            </Link>
           ))}
         </div>
 

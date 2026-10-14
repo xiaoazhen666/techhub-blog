@@ -39,6 +39,7 @@ export interface Category {
   id: number;
   name: string;
   description?: string;
+  articleCount?: number;
 }
 
 export interface Comment {

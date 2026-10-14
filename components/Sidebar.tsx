@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { apiGetTags } from "@/lib/api";
-import { Tag } from "@/lib/types";
+import { apiGetCategories, apiGetTags } from "@/lib/api";
+import { Category, Tag } from "@/lib/types";
 
 export default function Sidebar() {
   const [tags, setTags] = useState<Tag[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     apiGetTags().then((list) => {
@@ -14,10 +15,32 @@ export default function Sidebar() {
       const sorted = [...list].sort((a, b) => (b.articleCount ?? 0) - (a.articleCount ?? 0)).slice(0, 12);
       setTags(sorted);
     }).catch(() => {});
+
+    apiGetCategories().then(setCategories).catch(() => {});
   }, []);
 
   return (
     <aside className="space-y-4">
+      {/* 分类导航 */}
+      <div className="card p-4">
+        <h3 className="text-sm font-bold mb-3">📂 分类</h3>
+        <div className="flex flex-col gap-1">
+          {categories.map((c) => (
+            <Link
+              key={c.id}
+              href={`/category/${c.id}`}
+              className="flex items-center justify-between px-2.5 py-1.5 rounded-md text-sm transition-colors hover:bg-brand-light"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              <span>{c.name}</span>
+              <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                {c.articleCount ?? 0}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* 热门标签 */}
       <div className="card p-4">
         <h3 className="text-sm font-bold mb-3">🏷️ 热门标签</h3>
